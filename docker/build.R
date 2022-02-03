@@ -4,6 +4,6 @@
 bashString <- "cp ../renv.lock ."
 system(bashString)
 
-bashstring <- "sudo docker build -t eminty/covid19_vaccine_tts:0.5 ."
+bashstring <- "sudo docker build -t eminty/covid19_vaccine_tts:0.6 ."
 system(bashstring)
 
