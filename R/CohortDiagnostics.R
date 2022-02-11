@@ -86,32 +86,31 @@ execute <- function(connectionDetails,
   }
   
   ParallelLogger::logInfo("Creating cohorts")
-  CohortDiagnostics::instantiateCohortSet(
-    connectionDetails = connectionDetails,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    vocabularyDatabaseSchema = vocabularyDatabaseSchema,
-    cohortTable = cohortTable,
-    tempEmulationSchema = tempEmulationSchema,
-    packageName = "Covid19VaccineAesiDiagnostics",
-    cohortToCreateFile = "settings/CohortsToCreate.csv",
-    createCohortTable = TRUE,
-    generateInclusionStats = TRUE,
-    inclusionStatisticsFolder = outputFolder,
-    incremental = TRUE,
-    incrementalFolder = incrementalFolder
-  )
+  
+  cohortDefinitionSet <- CohortDiagnostics::loadCohortsFromPackage(packageName = utils::packageName())
+  
+  cohortTableNames <- CohortGenerator::getCohortTableNames(cohortTable = cohortTable)
+  CohortGenerator::createCohortTables(connectionDetails = connectionDetails,
+                                      cohortDatabaseSchema = cohortDatabaseSchema,
+                                      cohortTableNames = cohortTableNames)
+  
+  CohortGenerator::generateCohortSet(connectionDetails = connectionDetails,
+                                     cohortTableNames = cohortTableNames,
+                                     cdmDatabaseSchema = cdmDatabaseSchema,
+                                     cohortDatabaseSchema = cohortDatabaseSchema,
+                                     cohortDefinitionSet = cohortDefinitionSet, 
+                                     incrementalFolder = incrementalFolder,
+                                     incremental = TRUE)
   
   ParallelLogger::logInfo("Running study diagnostics")
-  CohortDiagnostics::runCohortDiagnostics(
-    packageName = "Covid19VaccineAesiDiagnostics",
+  CohortDiagnostics::executeDiagnostics(
+    cohortDefinitionSet,
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     vocabularyDatabaseSchema = vocabularyDatabaseSchema,
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    inclusionStatisticsFolder = outputFolder,
     exportFolder = file.path(outputFolder, "diagnosticsExport"),
     databaseId = databaseId,
     databaseName = databaseName,
